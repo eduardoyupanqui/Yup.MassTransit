@@ -8,5 +8,6 @@ namespace Yup.MassTransit.Jobs.Events
     {
         public string Mensaje { get; }
         public string StackTrace { get; }
+        public DateTime FechaFin { get; }
     }
 }

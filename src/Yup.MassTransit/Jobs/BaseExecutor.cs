@@ -46,12 +46,15 @@ namespace Yup.MassTransit.Jobs
             }) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        protected async Task NofificarProgreso(int orden, string mensaje)
+        protected async Task NofificarProgreso(int orden, string mensaje, string mensajeException = null, string outPutTarea = null)
         {
             await (StatusTarea?.Invoke(this, new ExecutorTaskEventArgs()
             {
                 Orden = orden,
-                Mensaje = mensaje
+                Mensaje = mensaje,
+                MensajeExcepcion = mensajeException,
+                OutputTarea = outPutTarea,
+                FechaInicio = DateTime.Now
             }) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
@@ -60,7 +63,8 @@ namespace Yup.MassTransit.Jobs
             await (ProcessFailed?.Invoke(this, new ExecutorFailEventArgs()
             {
                 Mensaje = message,
-                StackTrace = stackTrace
+                StackTrace = stackTrace,
+                FechaFin = DateTime.Now
             }) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 

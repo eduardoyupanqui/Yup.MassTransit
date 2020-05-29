@@ -32,9 +32,9 @@ namespace Yup.MassTransit.Jobs.Consumers
 
         public async Task Consume(ConsumeContext<JobCommand> context)
         {
-            _logger.LogInformation($"JobId: {context.Message.JobId} , InputJob: {context.Message.JobInput}");
+            _logger.LogInformation($"JobId: {context.Message.IdJob} , InputJob: {context.Message.InputJob}");
             _context = context;
-            JobId = context.Message.JobId;
+            JobId = context.Message.IdJob;
             await _executor.Execute(context.Message);
         }
 
@@ -44,11 +44,8 @@ namespace Yup.MassTransit.Jobs.Consumers
             //Comunicar al Master el inicio del job
             if (_context != null)
             {
-                await _context.Send<JobStarted>(new
-                {
-                    JobId = this.JobId,
-                    FechaInicio = e.FechaInicio
-                });
+                e.IdJob = this.JobId;
+                await _context.Send<JobStarted>(e);
             }
         }
 
@@ -58,13 +55,8 @@ namespace Yup.MassTransit.Jobs.Consumers
             //Comunicar al Master el progreso de las tareas
             if (_context != null)
             {
-                await _context.Send<JobTaskCompleted>(new
-                {
-                    JobId = this.JobId,
-                    Orden = e.Orden,
-                    Mensaje = e.Mensaje,
-                    FechaEjecucion = DateTime.Now
-                });
+                e.IdJob = this.JobId;
+                await _context.Send<JobTaskCompleted>(e);
             }
         }
         private async Task OnProcessCompleted(object sender, ExecutorCompleteEventArgs e)
@@ -73,11 +65,8 @@ namespace Yup.MassTransit.Jobs.Consumers
             //Comunicar al Master el fin del job
             if (_context != null)
             {
-                await _context.Send<JobCompleted>(new
-                {
-                    JobId = this.JobId,
-                    FechaFin = DateTime.Now
-                });
+                e.IdJob = this.JobId;
+                await _context.Send<JobCompleted>(e);
             }
         }
 
@@ -87,12 +76,8 @@ namespace Yup.MassTransit.Jobs.Consumers
             //Comunicar al Master que el job ha fallado
             if (_context != null)
             {
-                await _context.Send<JobFailed>(new
-                {
-                    JobId = this.JobId,
-                    Mensaje = e.Mensaje,
-                    StackTrace = e.StackTrace,
-                });
+                e.IdJob = this.JobId;
+                await _context.Send<JobFailed>(e);
             }
         }
     }

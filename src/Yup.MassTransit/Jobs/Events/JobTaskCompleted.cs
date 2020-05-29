@@ -8,6 +8,9 @@ namespace Yup.MassTransit.Jobs.Events
     {
         public int Orden { get; }
         public string Mensaje { get; }
-        public DateTime FechaEjecucion { get; }
+        public string MensajeExcepcion { get; }
+        public string OutputTarea { get; }
+        public DateTime FechaInicio { get; }
+        public DateTime? FechaFin { get; }
     }
 }

@@ -6,6 +6,6 @@ namespace Yup.MassTransit.Jobs.Events
 {
     public interface JobEvent
     {
-        public Guid JobId { get; }
+        public Guid IdJob { get; }
     }
 }
