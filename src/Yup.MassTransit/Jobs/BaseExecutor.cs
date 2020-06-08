@@ -4,15 +4,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Yup.MassTransit.Jobs.Client.EventArgs;
 using Yup.MassTransit.Jobs.Commands;
+using Yup.MassTransit.Jobs.Events;
 
 namespace Yup.MassTransit.Jobs
 {
     public abstract class BaseExecutor : IExecutor
     {
-        public event AsyncEventHandler<ExecutorStartEventArgs> ProcessStarted;
-        public event AsyncEventHandler<ExecutorTaskEventArgs> StatusTarea;
-        public event AsyncEventHandler<ExecutorCompleteEventArgs> ProcessCompleted;
-        public event AsyncEventHandler<ExecutorFailEventArgs> ProcessFailed;
+        public event AsyncEventHandler<JobStarted> ProcessStarted;
+        public event AsyncEventHandler<JobTaskCompleted> StatusTarea;
+        public event AsyncEventHandler<JobCompleted> ProcessCompleted;
+        public event AsyncEventHandler<JobFailed> ProcessFailed;
 
         protected BaseExecutor()
         {
@@ -21,7 +22,10 @@ namespace Yup.MassTransit.Jobs
 
         public virtual async Task Execute(JobCommand command)
         {
-            await NofificarInicio();
+            await NofificarInicio(new ExecutorStartEventArgs()
+            {
+                FechaInicio = DateTime.Now
+            });
             try
             {
                 await EjecutarJob(command);
@@ -29,51 +33,38 @@ namespace Yup.MassTransit.Jobs
             }
             catch (Exception ex)
             {
-                await NofificarError(ex.Message, ex.StackTrace);
+                await NofificarError(new ExecutorFailEventArgs()
+                {
+                    Mensaje = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    FechaFin = DateTime.Now
+                });
                 throw;
             }
 
-            await NofificarFin();
+            await NofificarFin(new ExecutorCompleteEventArgs { IdJob = command.IdJob, FechaFin = DateTime.Now });
         }
 
         public abstract Task EjecutarJob(JobCommand command);
 
-        private async Task NofificarInicio()
+        private async Task NofificarInicio(JobStarted jobStarted)
         {
-            await (ProcessStarted?.Invoke(this, new ExecutorStartEventArgs()
-            {
-                FechaInicio = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            await (ProcessStarted?.Invoke(this, jobStarted) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        protected async Task NofificarProgreso(int orden, string mensaje, string mensajeException = null, string outPutTarea = null)
+        protected async Task NofificarProgreso(JobTaskCompleted jobTaskCompleted)
         {
-            await (StatusTarea?.Invoke(this, new ExecutorTaskEventArgs()
-            {
-                Orden = orden,
-                Mensaje = mensaje,
-                MensajeExcepcion = mensajeException,
-                OutputTarea = outPutTarea,
-                FechaInicio = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            await (StatusTarea?.Invoke(this, jobTaskCompleted) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        private async Task NofificarError(string message, string stackTrace)
+        private async Task NofificarError(JobFailed jobFailed)
         {
-            await (ProcessFailed?.Invoke(this, new ExecutorFailEventArgs()
-            {
-                Mensaje = message,
-                StackTrace = stackTrace,
-                FechaFin = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            await (ProcessFailed?.Invoke(this, jobFailed) ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        private async Task NofificarFin()
+        private async Task NofificarFin(JobCompleted jobCompleted)
         {
-            await (ProcessCompleted?.Invoke(this, new ExecutorCompleteEventArgs()
-            {
-                FechaFin = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            await (ProcessCompleted?.Invoke(this, jobCompleted) ?? Task.CompletedTask).ConfigureAwait(false);
         }
     }
 }

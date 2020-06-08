@@ -3,7 +3,7 @@ using Yup.MassTransit.Jobs.Events;
 
 namespace Yup.MassTransit.Jobs.Client.EventArgs
 {
-    public class ExecutorTaskEventArgs : System.EventArgs, JobTaskCompleted
+    internal class ExecutorTaskEventArgs : System.EventArgs, JobTaskCompleted
     {
         public Guid IdJob { get; set; }
         public int Orden { get; set; }
