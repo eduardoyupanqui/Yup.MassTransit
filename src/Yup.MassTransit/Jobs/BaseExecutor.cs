@@ -13,67 +13,72 @@ namespace Yup.MassTransit.Jobs
         public event AsyncEventHandler<ExecutorTaskEventArgs> StatusTarea;
         public event AsyncEventHandler<ExecutorCompleteEventArgs> ProcessCompleted;
         public event AsyncEventHandler<ExecutorFailEventArgs> ProcessFailed;
-
+        private Guid IdJob;
         protected BaseExecutor()
         {
 
         }
 
-        public virtual async Task Execute(JobCommand command)
+        public virtual async Task<JobResult> Execute(JobCommand command)
         {
+            IdJob = command.IdJob;
             await NofificarInicio();
             try
             {
-                await EjecutarJob(command);
-
+                var result = await EjecutarJob(command);
+                await NofificarFin(result);
+                return result;
             }
             catch (Exception ex)
             {
                 await NofificarError(ex.Message, ex.StackTrace);
                 throw;
             }
-
-            await NofificarFin();
         }
 
-        public abstract Task EjecutarJob(JobCommand command);
+        public abstract Task<JobResult> EjecutarJob(JobCommand command);
 
-        private async Task NofificarInicio()
+        private Task NofificarInicio()
         {
-            await (ProcessStarted?.Invoke(this, new ExecutorStartEventArgs()
+            return (ProcessStarted?.Invoke(this, new ExecutorStartEventArgs()
             {
+                IdJob = this.IdJob,
                 FechaInicio = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            }) ?? Task.CompletedTask);//.ConfigureAwait(false);
         }
 
-        protected async Task NofificarProgreso(int orden, string mensaje, string mensajeException = null, string outPutTarea = null)
+        protected Task NofificarProgreso(int orden, string mensaje, string mensajeException = null, string outPutTarea = null)
         {
-            await (StatusTarea?.Invoke(this, new ExecutorTaskEventArgs()
+            return (StatusTarea?.Invoke(this, new ExecutorTaskEventArgs()
             {
+                IdJob = this.IdJob,
                 Orden = orden,
                 Mensaje = mensaje,
                 MensajeExcepcion = mensajeException,
                 OutputTarea = outPutTarea,
                 FechaInicio = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            }) ?? Task.CompletedTask);//.ConfigureAwait(false);
         }
 
-        private async Task NofificarError(string message, string stackTrace)
+        private Task NofificarError(string message, string stackTrace)
         {
-            await (ProcessFailed?.Invoke(this, new ExecutorFailEventArgs()
+            return (ProcessFailed?.Invoke(this, new ExecutorFailEventArgs()
             {
+                IdJob = this.IdJob,
                 Mensaje = message,
                 StackTrace = stackTrace,
                 FechaFin = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            }) ?? Task.CompletedTask);//.ConfigureAwait(false);
         }
 
-        private async Task NofificarFin()
+        private Task NofificarFin(JobResult result)
         {
-            await (ProcessCompleted?.Invoke(this, new ExecutorCompleteEventArgs()
+            return (ProcessCompleted?.Invoke(this, new ExecutorCompleteEventArgs()
             {
+                IdJob = this.IdJob,
+                OutPutJob = result.OutputJob,
                 FechaFin = DateTime.Now
-            }) ?? Task.CompletedTask).ConfigureAwait(false);
+            }) ?? Task.CompletedTask);//.ConfigureAwait(false);
         }
     }
 }
