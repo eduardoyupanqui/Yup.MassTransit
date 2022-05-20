@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Yup.MassTransit.Jobs.Events;
+using Yup.MassTransit.Events;
 
 namespace Yup.MassTransit.Extensions
 {
@@ -24,5 +25,20 @@ namespace Yup.MassTransit.Extensions
                 ep.Consumer<JobConsumer<T>>(provider);
             });
         }
+
+        public static void Subscribe<T, TH>(this IRabbitMqBusFactoryConfigurator cfg, IServiceProvider provider)
+            where T : IntegrationEvent
+            where TH : class, IConsumer<T>
+        {
+            cfg.ReceiveEndpoint(typeof(T).Name.ToKebabCase(), ep =>
+            {
+                //ep.UseMessageRetry(r => r.None());
+                //ep.DiscardFaultedMessages();
+                //ep.DiscardSkippedMessages();
+                ep.Consumer<TH>(provider);
+                //EndpointConvention.Map<T>(ep.InputAddress);
+            });
+        }
+        
     }
 }
