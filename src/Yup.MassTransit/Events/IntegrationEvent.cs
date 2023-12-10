@@ -1,6 +1,6 @@
-﻿using MassTransit.Topology;
-using Newtonsoft.Json;
+﻿using MassTransit;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Yup.MassTransit.Events
 {
@@ -19,10 +19,7 @@ namespace Yup.MassTransit.Events
             Id = id;
             CreationDate = createDate;
         }
-
-        [JsonProperty]
         public Guid Id { get; private set; }
-        [JsonProperty]
         public DateTime CreationDate { get; private set; }
     }
 }

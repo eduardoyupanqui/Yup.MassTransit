@@ -1,11 +1,7 @@
 ﻿using Yup.MassTransit.Jobs;
-using Yup.MassTransit.Jobs.Commands;
 using Yup.MassTransit.Jobs.Consumers;
 using MassTransit;
-using MassTransit.RabbitMqTransport;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Yup.MassTransit.Jobs.Events;
 using Yup.MassTransit.Events;
 
@@ -13,7 +9,7 @@ namespace Yup.MassTransit.Extensions
 {
     public static class IRabbitMqBusFactoryConfiguratorExtensions
     {
-        public static void ReceivedJobEndpoint<T>(this IRabbitMqBusFactoryConfigurator cfg, IServiceProvider provider, string host = null)
+        public static void ReceivedJobEndpoint<T>(this IRabbitMqBusFactoryConfigurator cfg, IBusRegistrationContext provider, string host = null)
             where T : BaseExecutor
         {
             EndpointConvention.Map<JobStarted>(new Uri($"queue:{typeof(JobEvent).Name.ToUnderscoreCase()}"));
@@ -26,7 +22,7 @@ namespace Yup.MassTransit.Extensions
             });
         }
 
-        public static void Subscribe<T, TH>(this IRabbitMqBusFactoryConfigurator cfg, IServiceProvider provider)
+        public static void Subscribe<T, TH>(this IRabbitMqBusFactoryConfigurator cfg, IBusRegistrationContext provider)
             where T : IntegrationEvent
             where TH : class, IConsumer<T>
         {
