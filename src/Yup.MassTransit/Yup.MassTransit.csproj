@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9</TargetFramework>
-    <VersionPrefix>9.0.0</VersionPrefix>
+    <TargetFramework>net10.0</TargetFramework>
+    <VersionPrefix>10.0.0</VersionPrefix>
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
     <Authors>Yup</Authors>
     <Company>Yup</Company>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.7" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.5" />
   </ItemGroup>
   
 </Project>
